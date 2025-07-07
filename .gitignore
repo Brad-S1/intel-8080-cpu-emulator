@@ -1,3 +1,6 @@
+# Ignore ROM folder and all contents
+roms/
+
 # Prerequisites
 *.d
 
