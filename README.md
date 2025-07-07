@@ -1,1 +1,3 @@
-# CS467_Emulator
+# CS467_Emulator - 8080 Space Invaders Emulator
+
+This project is a software emulator for the Intel 8080 microprocessor, specifically designed to run the classic 1978 arcade game Space Invaders in its original, unmodified form. Built as a CS 467 capstone project, this emulator provides hands-on experience with fundamental computer science concepts including CPU instruction cycles, memory management, interrupt handling, and low-level hardware emulation. Written in C and developed collaboratively using modern software engineering practices, the emulator faithfully recreates the original arcade hardware environment, allowing the authentic Space Invaders ROM to execute exactly as it did on the original machine.
