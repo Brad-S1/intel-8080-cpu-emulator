@@ -298,13 +298,19 @@ int disassembled8080Op(unsigned char *codebuffer, int pc) {
  * If the ROM cannot be read or the read bytes are less than the size of the ROM, will exit with error code 1.
  *
  */
-int main(void) {
-  FILE *fp = fopen("./../../roms/space_invaders/invaders", "r");
+int main(int argc, char *argv[]) {
+  // Check if ROM file was provided as argument
+  if (argc != 2) {
+      fprintf(stderr, "Usage: %s <rom_file>\n", argv[0]);
+      fprintf(stderr, "Example: %s roms/space_invaders/invaders\n", argv[0]);
+      return 1;
+  }
 
+  FILE *fp = fopen(argv[1], "rb"); // Note: "rb" for binary files
   if (fp == NULL) {
-  err(1, "Unable to open rom\n");
+    err(1, "Unable to open ROM file: %s", argv[1]);
   } else {
-    printf("rom opened successfully\n");
+    printf("ROM file opened successfully: %s\n", argv[1]);
   }
   
   // Find file size. Alien Invaders should be 8192 bytes.
@@ -318,7 +324,7 @@ int main(void) {
   size_t bytes_read = fread(buffer, sizeof(char), sizeof(buffer), fp);
   fclose(fp);
 
-  if (bytes_read != file_size) {
+  if (bytes_read != (size_t)file_size) { // Cast file_size to size_t to match bytes_read type
     err(1, "Failed to read complete ROM file.\n");
   }
 

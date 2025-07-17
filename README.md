@@ -15,9 +15,9 @@ This project is a software emulator for the Intel 8080 microprocessor, specifica
 ├── roms/                      # Space Invaders ROM files
 ├── docs/                      # Project documentation
 ├── scripts/                   # Build and utility scripts
-├── Makefile                   # Build system configuration (once implemented)
-├── .gitignore                # Git ignore rules
-└── README.md                 # This file
+├── Makefile                   # Build system configuration
+├── .gitignore                 # Git ignore rules
+└── README.md                  # This file
 ```
 ### Current Status
 
@@ -38,7 +38,36 @@ cd CS467_Emulator
 
 # Set up WSL2 development environment (once implemented)
 ./scripts/setup-wsl2.sh
+```
 
-# Build the project (once source files are implemented)
+## Using Makefile
+Makefile is used to create consistency accross how the project is built and developed. Instructions to use and modify are provided. New files will need to be added to the Makefile in order to compile them properly with dependencies. 
+
+When `make` runs, it creates two new folders on the root directory called `/build` and `/bin`. All compiled object files are saved in `/build` and the executable file(s) are saved in `/bin`. 
+
+### To add new files to Makefile
+1. Add filename to appropriate SOURCES variable
+2. Add object file to appropriate OBJECTS variable
+3. Add compilation rule for your file
+4. Run: make clean && make
+
+### Building with Makefile
+```bash
+# Build the project
 make clean && make all
+
+# Clean up after build - will delete /build and /bin
+make clean
+
+# Makefile help
+make help
+```
+
+### Available Commands
+```
+make          - Build project
+make test     - Test with ROM, will create "output.txt" on the root directory with all instructions
+make debug    - Debug build
+make clean    - Clean up
+make status   - Show status
 ```
