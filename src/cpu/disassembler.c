@@ -298,6 +298,7 @@ int disassembled8080Op(unsigned char *codebuffer, int pc) {
  * If the ROM cannot be read or the read bytes are less than the size of the ROM, will exit with error code 1.
  *
  */
+/*
 int main(int argc, char *argv[]) {
   // Check if ROM file was provided as argument
   if (argc != 2) {
@@ -308,7 +309,7 @@ int main(int argc, char *argv[]) {
 
   FILE *fp = fopen(argv[1], "rb"); // Note: "rb" for binary files
   if (fp == NULL) {
-    err(1, "Unable to open ROM file: %s", argv[1]);
+    err(1, "Unable to open ROM file: %s\n", argv[1]);
   } else {
     printf("ROM file opened successfully: %s\n", argv[1]);
   }
@@ -340,4 +341,4 @@ int main(int argc, char *argv[]) {
 
   return 0;
 }
-
+*/

@@ -21,7 +21,7 @@ IO_DIR = $(SRC_DIR)/io
 ROMS_DIR = roms
 
 # Current source files
-CPU_SOURCES = $(CPU_DIR)/disassembler.c
+CPU_SOURCES = $(CPU_DIR)/disassembler.c $(CPU_DIR)/emulator_shell.c
 # Add more/uncomment files here as we create them:
 # CPU_SOURCES += $(CPU_DIR)/cpu8080.c
 # MEMORY_SOURCES = $(MEMORY_DIR)/memory.c
@@ -37,7 +37,8 @@ ALL_SOURCES = $(CPU_SOURCES)
 # Object files 
 # NOTE: Using explicit object file definitions to avoid path construction issues
 # As we add more source files, we'll add their corresponding object files here
-CPU_OBJECTS = $(BUILD_DIR)/cpu/disassembler.o
+DISASM_OBJECTS = $(BUILD_DIR)/cpu/disassembler.o
+EMULATOR_OBJECTS = $(BUILD_DIR)/cpu/emulator_shell.o
 # Future object files to add:
 # CPU_OBJECTS += $(BUILD_DIR)/cpu/cpu8080.o
 # MEMORY_OBJECTS = $(BUILD_DIR)/memory/memory.o
@@ -45,13 +46,14 @@ CPU_OBJECTS = $(BUILD_DIR)/cpu/disassembler.o
 # IO_OBJECTS = $(BUILD_DIR)/io/input.o
 
 # All objects - expand this as we add new modules
-ALL_OBJECTS = $(CPU_OBJECTS)
-# ALL_OBJECTS += $(MEMORY_OBJECTS)
+ALL_OBJECTS = $(DISASM_OBJECTS)
+ALL_OBJECTS += $(EMULATOR_OBJECTS)
 # ALL_OBJECTS += $(GRAPHICS_OBJECTS)
 # ALL_OBJECTS += $(IO_OBJECTS)
 
 # Targets
-DISASM_TARGET = $(BIN_DIR)/disassembler
+# DISASM_TARGET = $(BIN_DIR)/disassembler
+EMULATOR_TARGET = $(BIN_DIR)/emulator
 # TO ADD FULL EMULATOR: uncomment when we have cpu + memory + graphics + io
 # EMULATOR_TARGET = $(BIN_DIR)/space_invaders_emulator
 
@@ -65,16 +67,29 @@ DISASM_TARGET = $(BIN_DIR)/disassembler
 # =============================================================================
 
 # Default target - what happens when you just type "make"
-all: $(DISASM_TARGET)
+
+all: $(EMULATOR_TARGET)
+# all: $(DISASM_TARGET) $(EMULATOR_TARGET)
 
 # Build disassembler
-$(DISASM_TARGET): $(ALL_OBJECTS)
+$(DISASM_TARGET): $(DISASM_OBJECTS)
 	@mkdir -p $(BIN_DIR)
-	$(CC) $(CFLAGS) -o $@ $(ALL_OBJECTS)
+	$(CC) $(CFLAGS) -o $@ $(DISASM_OBJECTS)
 	@echo "✓ Built $(DISASM_TARGET) successfully!"
 
-# Compile CPU files
+# Build emulator:
+$(EMULATOR_TARGET): $(EMULATOR_OBJECTS)
+	@mkdir -p $(BIN_DIR)
+	$(CC) $(CFLAGS) -o $@ $(EMULATOR_OBJECTS)
+	@echo "✓ Built $(EMULATOR_TARGET) successfully!"
+
+# Compile disassembler files
 $(BUILD_DIR)/cpu/disassembler.o: $(CPU_DIR)/disassembler.c
+	@mkdir -p $(BUILD_DIR)/cpu
+	$(CC) $(CFLAGS) -c $< -o $@
+
+# Compile emulator shell:
+$(BUILD_DIR)/cpu/emulator_shell.o: $(CPU_DIR)/emulator_shell.c $(CPU_DIR)/disassembler.c
 	@mkdir -p $(BUILD_DIR)/cpu
 	$(CC) $(CFLAGS) -c $< -o $@
 
