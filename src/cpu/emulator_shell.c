@@ -2,7 +2,7 @@
 #include <stdint.h>
 #include <stdlib.h>
 #include <err.h>
-#include "disassembler.c"
+#include <disassembler.h>
 
 // constants
 #define MEMORY_SIZE 0x10000  // 64KB (8080 has 16-bit memory bus)

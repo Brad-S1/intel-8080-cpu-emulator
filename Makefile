@@ -38,6 +38,7 @@ ALL_SOURCES = $(CPU_SOURCES)
 # NOTE: Using explicit object file definitions to avoid path construction issues
 # As we add more source files, we'll add their corresponding object files here
 DISASM_OBJECTS = $(BUILD_DIR)/cpu/disassembler.o
+DISASM_MAIN_OBJECTS = $(BUILD_DIR)/cpu/disassembler_main.o
 EMULATOR_OBJECTS = $(BUILD_DIR)/cpu/emulator_shell.o
 # Future object files to add:
 # CPU_OBJECTS += $(BUILD_DIR)/cpu/cpu8080.o
@@ -46,13 +47,13 @@ EMULATOR_OBJECTS = $(BUILD_DIR)/cpu/emulator_shell.o
 # IO_OBJECTS = $(BUILD_DIR)/io/input.o
 
 # All objects - expand this as we add new modules
-ALL_OBJECTS = $(DISASM_OBJECTS)
+ALL_OBJECTS = $(DISASM_OBJECTS) $(DISASM_MAIN_OBJECTS)
 ALL_OBJECTS += $(EMULATOR_OBJECTS)
 # ALL_OBJECTS += $(GRAPHICS_OBJECTS)
 # ALL_OBJECTS += $(IO_OBJECTS)
 
 # Targets
-# DISASM_TARGET = $(BIN_DIR)/disassembler
+DISASM_TARGET = $(BIN_DIR)/disassembler
 EMULATOR_TARGET = $(BIN_DIR)/emulator
 # TO ADD FULL EMULATOR: uncomment when we have cpu + memory + graphics + io
 # EMULATOR_TARGET = $(BIN_DIR)/space_invaders_emulator
@@ -60,38 +61,48 @@ EMULATOR_TARGET = $(BIN_DIR)/emulator
 # Include directories for header files  
 # TO USE HEADER FILES: uncomment when we start creating .h files
 # This tells compiler where to find our header files when we #include them
-# INCLUDES = -I$(CPU_DIR) -I$(MEMORY_DIR) -I$(GRAPHICS_DIR) -I$(IO_DIR)
+INCLUDES = -I$(CPU_DIR) -I$(MEMORY_DIR) -I$(GRAPHICS_DIR) -I$(IO_DIR)
 
 # =============================================================================
 # BUILD RULES
 # =============================================================================
 
 # Default target - what happens when you just type "make"
-
+# Builds only the emulator (with disassembler as helper function)
 all: $(EMULATOR_TARGET)
-# all: $(DISASM_TARGET) $(EMULATOR_TARGET)
 
-# Build disassembler
-$(DISASM_TARGET): $(DISASM_OBJECTS)
-	@mkdir -p $(BIN_DIR)
-	$(CC) $(CFLAGS) -o $@ $(DISASM_OBJECTS)
-	@echo "✓ Built $(DISASM_TARGET) successfully!"
+# Build standalone disassembler - accessed via "make disassemble"
+disassemble: $(DISASM_TARGET)
 
-# Build emulator:
-$(EMULATOR_TARGET): $(EMULATOR_OBJECTS)
+# Build both targets
+both: $(DISASM_TARGET) $(EMULATOR_TARGET)
+
+# Build standalone disassembler (disassembler_main + disassembler)
+$(DISASM_TARGET): $(DISASM_OBJECTS) $(DISASM_MAIN_OBJECTS)
 	@mkdir -p $(BIN_DIR)
-	$(CC) $(CFLAGS) -o $@ $(EMULATOR_OBJECTS)
+	$(CC) $(CFLAGS) -o $@ $(DISASM_OBJECTS) $(DISASM_MAIN_OBJECTS)
+	@echo "✓ Built standalone $(DISASM_TARGET) successfully!"
+
+# Build emulator (emulator_shell + disassembler as helper)
+$(EMULATOR_TARGET): $(EMULATOR_OBJECTS) $(DISASM_OBJECTS)
+	@mkdir -p $(BIN_DIR)
+	$(CC) $(CFLAGS) -o $@ $(EMULATOR_OBJECTS) $(DISASM_OBJECTS)
 	@echo "✓ Built $(EMULATOR_TARGET) successfully!"
 
-# Compile disassembler files
-$(BUILD_DIR)/cpu/disassembler.o: $(CPU_DIR)/disassembler.c
+# Compile disassembler core (no main function)
+$(BUILD_DIR)/cpu/disassembler.o: $(CPU_DIR)/disassembler.c $(CPU_DIR)/disassembler.h
 	@mkdir -p $(BUILD_DIR)/cpu
-	$(CC) $(CFLAGS) -c $< -o $@
+	$(CC) $(CFLAGS) $(INCLUDES) -c $< -o $@
 
-# Compile emulator shell:
-$(BUILD_DIR)/cpu/emulator_shell.o: $(CPU_DIR)/emulator_shell.c $(CPU_DIR)/disassembler.c
+# Compile disassembler main (standalone program)
+$(BUILD_DIR)/cpu/disassembler_main.o: $(CPU_DIR)/disassembler_main.c $(CPU_DIR)/disassembler.h
 	@mkdir -p $(BUILD_DIR)/cpu
-	$(CC) $(CFLAGS) -c $< -o $@
+	$(CC) $(CFLAGS) $(INCLUDES) -c $< -o $@
+
+# Compile emulator shell (includes disassembler.h for helper function)
+$(BUILD_DIR)/cpu/emulator_shell.o: $(CPU_DIR)/emulator_shell.c $(CPU_DIR)/disassembler.h
+	@mkdir -p $(BUILD_DIR)/cpu
+	$(CC) $(CFLAGS) $(INCLUDES) -c $< -o $@
 
 # Add more compilation rules as we create files:
 # $(BUILD_DIR)/cpu/cpu8080.o: $(CPU_DIR)/cpu8080.c
@@ -123,21 +134,15 @@ $(BUILD_DIR)/cpu/emulator_shell.o: $(CPU_DIR)/emulator_shell.c $(CPU_DIR)/disass
 
 # Debug build
 debug: CFLAGS += -DDEBUG -O0
-debug: clean $(DISASM_TARGET)
+debug: clean all
 
-# Test with ROM files
-test: $(DISASM_TARGET)
+# Test emulator
+test: $(EMULATOR_TARGET)
 	@if [ -f "$(ROMS_DIR)/space_invaders/invaders" ]; then \
-		echo "Testing with ROM file..."; \
-		./$(DISASM_TARGET) $(ROMS_DIR)/space_invaders/invaders > output.txt; \
-		echo "✓ Output saved to output.txt"; \
-	elif [ -f "$(ROMS_DIR)/invaders" ]; then \
-		echo "Testing with ROM file..."; \
-		./$(DISASM_TARGET) $(ROMS_DIR)/invaders > output.txt; \
-		echo "✓ Output saved to output.txt"; \
+		echo "Running emulator with ROM file..."; \
+		./$(EMULATOR_TARGET) $(ROMS_DIR)/space_invaders/invaders; \
 	else \
-		echo "Put ROM file in $(ROMS_DIR)/ to test"; \
-		echo "Expected: $(ROMS_DIR)/invaders or $(ROMS_DIR)/space_invaders/invaders"; \
+		echo "Error: ROM file not found at $(ROMS_DIR)/space_invaders/invaders"; \
 	fi
 
 # Clean up
@@ -150,25 +155,31 @@ clean:
 status:
 	@echo "Sources: $(ALL_SOURCES)"
 	@echo "Objects: $(ALL_OBJECTS)"
-	@echo "Target: $(DISASM_TARGET)"
+	@echo "Disassembler Target: $(DISASM_TARGET)"
+	@echo "Emulator Target: $(EMULATOR_TARGET)"
 	@echo ""
 	@echo "Files that exist:"
 	@find $(SRC_DIR) -name "*.c" 2>/dev/null || echo "No .c files found"
+	@find $(SRC_DIR) -name "*.h" 2>/dev/null || echo "No .h files found"
 
 # Help
 help:
 	@echo "Commands:"
-	@echo "  make          - Build project"
-	@echo "  make test     - Test with ROM"
-	@echo "  make debug    - Debug build"
-	@echo "  make clean    - Clean up"
-	@echo "  make status   - Show status"
+	@echo "  make              - Build emulator only (default)"
+	@echo "  make disassemble  - Build standalone disassembler only"
+	@echo "  make both         - Build both emulator and disassembler"
+	@echo "  make test-disasm  - Test standalone disassembler with ROM"
+	@echo "  make test-emulator- Test emulator with ROM"
+	@echo "  make test         - Test both disassembler and emulator"
+	@echo "  make debug        - Debug build of emulator"
+	@echo "  make clean        - Clean up build files"
+	@echo "  make status       - Show project status"
 	@echo ""
-	@echo "To add new files:"
-	@echo "1. Add filename to appropriate SOURCES variable"
-	@echo "2. Add object file to appropriate OBJECTS variable"
-	@echo "3. Add compilation rule for your file"
-	@echo "4. Run: make clean && make"
+	@echo "File structure expected:"
+	@echo "  $(CPU_DIR)/disassembler.h     - Header file"
+	@echo "  $(CPU_DIR)/disassembler.c     - Core disassembler (no main)"
+	@echo "  $(CPU_DIR)/disassembler_main.c- Standalone disassembler main"
+	@echo "  $(CPU_DIR)/emulator_shell.c   - Emulator (includes disassembler.h)"
 
 # Install dependencies
 install-deps:
