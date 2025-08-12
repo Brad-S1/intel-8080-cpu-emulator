@@ -6,7 +6,8 @@
 # -g: include debug symbols for use with gdb debugger to set breakpoints and examine variables
 # -O2: optimizes for performance (makes code run faster)
 CC = gcc
-CFLAGS = -Wall -Wextra -g -O2
+CFLAGS = -Wall -Wextra -g -O2 $(shell sdl2-config --cflags) -I/opt/homebrew/include
+SDL_LIBS = $(shell sdl2-config --libs) -lSDL2_mixer
 
 # Directories
 BUILD_DIR = build
@@ -21,18 +22,20 @@ IO_DIR = $(SRC_DIR)/io
 ROMS_DIR = roms
 
 # Current source files
-CPU_SOURCES = $(CPU_DIR)/disassembler.c $(CPU_DIR)/emulator_shell.c
+# CPU_SOURCES = $(CPU_DIR)/disassembler.c $(CPU_DIR)/emulator_shell.c
+CPU_SOURCES = $(CPU_DIR)/emulator_shell.c
 # Add more/uncomment files here as we create them:
 # CPU_SOURCES += $(CPU_DIR)/cpu8080.c
 # MEMORY_SOURCES = $(MEMORY_DIR)/memory.c
-# GRAPHICS_SOURCES = $(GRAPHICS_DIR)/graphics.c
-# IO_SOURCES = $(IO_DIR)/input.c
+GRAPHICS_SOURCES = $(GRAPHICS_DIR)/graphics.c
+GRAPHICS_OBJECTS = $(BUILD_DIR)/graphics/graphics.o
+IO_SOURCES = $(IO_DIR)/input.c $(IO_DIR)/sound.c
 
 # All sources (TO EXPAND: uncomment the += lines below as we add new modules)
 ALL_SOURCES = $(CPU_SOURCES)
 # ALL_SOURCES += $(MEMORY_SOURCES)
-# ALL_SOURCES += $(GRAPHICS_SOURCES)
-# ALL_SOURCES += $(IO_SOURCES)
+ALL_SOURCES += $(GRAPHICS_SOURCES)
+ALL_SOURCES += $(IO_SOURCES)
 
 # Object files 
 # NOTE: Using explicit object file definitions to avoid path construction issues
@@ -43,14 +46,14 @@ EMULATOR_OBJECTS = $(BUILD_DIR)/cpu/emulator_shell.o
 # Future object files to add:
 # CPU_OBJECTS += $(BUILD_DIR)/cpu/cpu8080.o
 # MEMORY_OBJECTS = $(BUILD_DIR)/memory/memory.o
-# GRAPHICS_OBJECTS = $(BUILD_DIR)/graphics/graphics.o
-# IO_OBJECTS = $(BUILD_DIR)/io/input.o
+GRAPHICS_OBJECTS = $(BUILD_DIR)/graphics/graphics.o
+IO_OBJECTS = $(BUILD_DIR)/io/input.o $(BUILD_DIR)/io/sound.o
 
 # All objects - expand this as we add new modules
 ALL_OBJECTS = $(DISASM_OBJECTS) $(DISASM_MAIN_OBJECTS)
 ALL_OBJECTS += $(EMULATOR_OBJECTS)
-# ALL_OBJECTS += $(GRAPHICS_OBJECTS)
-# ALL_OBJECTS += $(IO_OBJECTS)
+ALL_OBJECTS += $(GRAPHICS_OBJECTS)
+ALL_OBJECTS += $(IO_OBJECTS)
 
 # Targets
 DISASM_TARGET = $(BIN_DIR)/disassembler
@@ -84,9 +87,9 @@ $(DISASM_TARGET): $(DISASM_OBJECTS) $(DISASM_MAIN_OBJECTS)
 	@echo "✓ Built standalone $(DISASM_TARGET) successfully!"
 
 # Build emulator (emulator_shell + disassembler as helper)
-$(EMULATOR_TARGET): $(EMULATOR_OBJECTS) $(DISASM_OBJECTS)
+$(EMULATOR_TARGET): $(EMULATOR_OBJECTS) $(DISASM_OBJECTS) $(GRAPHICS_OBJECTS) $(IO_OBJECTS)
 	@mkdir -p $(BIN_DIR)
-	$(CC) $(CFLAGS) -o $@ $(EMULATOR_OBJECTS) $(DISASM_OBJECTS)
+	$(CC) $(CFLAGS) -o $@ $^ $(SDL_LIBS)
 	@echo "✓ Built $(EMULATOR_TARGET) successfully!"
 
 # Compile disassembler core (no main function)
@@ -113,13 +116,17 @@ $(BUILD_DIR)/cpu/emulator_shell.o: $(CPU_DIR)/emulator_shell.c $(CPU_DIR)/disass
 # 	@mkdir -p $(BUILD_DIR)/memory
 # 	$(CC) $(CFLAGS) -c $< -o $@
 
-# $(BUILD_DIR)/graphics/graphics.o: $(GRAPHICS_DIR)/graphics.c
-# 	@mkdir -p $(BUILD_DIR)/graphics
-# 	$(CC) $(CFLAGS) -c $< -o $@
+$(BUILD_DIR)/graphics/graphics.o: $(GRAPHICS_DIR)/graphics.c
+	@mkdir -p $(BUILD_DIR)/graphics
+	$(CC) $(CFLAGS) $(INCLUDES) -c $< -o $@
 
-# $(BUILD_DIR)/io/input.o: $(IO_DIR)/input.c
-# 	@mkdir -p $(BUILD_DIR)/io
-# 	$(CC) $(CFLAGS) -c $< -o $@
+$(BUILD_DIR)/io/input.o: $(IO_DIR)/input.c
+	@mkdir -p $(BUILD_DIR)/io
+	$(CC) $(CFLAGS) $(INCLUDES) -c $< -o $@ 
+
+$(BUILD_DIR)/io/sound.o: $(IO_DIR)/sound.c
+	@mkdir -p $(BUILD_DIR)/io
+	$(CC) $(CFLAGS) $(INCLUDES) -c $< -o $@
 
 # Future emulator target (uncomment when ready)
 # Note: When we add graphics/audio, we may also need -lSDL2_mixer for sound
@@ -184,7 +191,7 @@ help:
 # Install dependencies
 install-deps:
 	sudo apt update
-	sudo apt install -y libsdl2-dev build-essential
+	sudo apt install -y libsdl2-dev libsdl2-image-dev libsdl2-mixer-dev libsdl2-ttf-dev libsdl2-net-dev
 	@echo "✓ Dependencies installed"
 
 .PHONY: all debug test clean status help install-deps
