@@ -1,5 +1,6 @@
 # Ignore ROM folder and all contents
 roms/
+tests/
 
 # Prerequisites
 *.d

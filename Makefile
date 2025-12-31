@@ -22,18 +22,13 @@ IO_DIR = $(SRC_DIR)/io
 ROMS_DIR = roms
 
 # Current source files
-# CPU_SOURCES = $(CPU_DIR)/disassembler.c $(CPU_DIR)/emulator_shell.c
 CPU_SOURCES = $(CPU_DIR)/emulator_shell.c
-# Add more/uncomment files here as we create them:
-# CPU_SOURCES += $(CPU_DIR)/cpu8080.c
-# MEMORY_SOURCES = $(MEMORY_DIR)/memory.c
 GRAPHICS_SOURCES = $(GRAPHICS_DIR)/graphics.c
 GRAPHICS_OBJECTS = $(BUILD_DIR)/graphics/graphics.o
 IO_SOURCES = $(IO_DIR)/input.c $(IO_DIR)/sound.c
 
-# All sources (TO EXPAND: uncomment the += lines below as we add new modules)
+# All sources
 ALL_SOURCES = $(CPU_SOURCES)
-# ALL_SOURCES += $(MEMORY_SOURCES)
 ALL_SOURCES += $(GRAPHICS_SOURCES)
 ALL_SOURCES += $(IO_SOURCES)
 
@@ -43,9 +38,6 @@ ALL_SOURCES += $(IO_SOURCES)
 DISASM_OBJECTS = $(BUILD_DIR)/cpu/disassembler.o
 DISASM_MAIN_OBJECTS = $(BUILD_DIR)/cpu/disassembler_main.o
 EMULATOR_OBJECTS = $(BUILD_DIR)/cpu/emulator_shell.o
-# Future object files to add:
-# CPU_OBJECTS += $(BUILD_DIR)/cpu/cpu8080.o
-# MEMORY_OBJECTS = $(BUILD_DIR)/memory/memory.o
 GRAPHICS_OBJECTS = $(BUILD_DIR)/graphics/graphics.o
 IO_OBJECTS = $(BUILD_DIR)/io/input.o $(BUILD_DIR)/io/sound.o
 
@@ -58,11 +50,8 @@ ALL_OBJECTS += $(IO_OBJECTS)
 # Targets
 DISASM_TARGET = $(BIN_DIR)/disassembler
 EMULATOR_TARGET = $(BIN_DIR)/emulator
-# TO ADD FULL EMULATOR: uncomment when we have cpu + memory + graphics + io
-# EMULATOR_TARGET = $(BIN_DIR)/space_invaders_emulator
 
 # Include directories for header files  
-# TO USE HEADER FILES: uncomment when we start creating .h files
 # This tells compiler where to find our header files when we #include them
 INCLUDES = -I$(CPU_DIR) -I$(MEMORY_DIR) -I$(GRAPHICS_DIR) -I$(IO_DIR)
 
@@ -107,15 +96,6 @@ $(BUILD_DIR)/cpu/emulator_shell.o: $(CPU_DIR)/emulator_shell.c $(CPU_DIR)/disass
 	@mkdir -p $(BUILD_DIR)/cpu
 	$(CC) $(CFLAGS) $(INCLUDES) -c $< -o $@
 
-# Add more compilation rules as we create files:
-# $(BUILD_DIR)/cpu/cpu8080.o: $(CPU_DIR)/cpu8080.c
-# 	@mkdir -p $(BUILD_DIR)/cpu
-# 	$(CC) $(CFLAGS) -c $< -o $@
-
-# $(BUILD_DIR)/memory/memory.o: $(MEMORY_DIR)/memory.c
-# 	@mkdir -p $(BUILD_DIR)/memory
-# 	$(CC) $(CFLAGS) -c $< -o $@
-
 $(BUILD_DIR)/graphics/graphics.o: $(GRAPHICS_DIR)/graphics.c
 	@mkdir -p $(BUILD_DIR)/graphics
 	$(CC) $(CFLAGS) $(INCLUDES) -c $< -o $@
@@ -127,13 +107,6 @@ $(BUILD_DIR)/io/input.o: $(IO_DIR)/input.c
 $(BUILD_DIR)/io/sound.o: $(IO_DIR)/sound.c
 	@mkdir -p $(BUILD_DIR)/io
 	$(CC) $(CFLAGS) $(INCLUDES) -c $< -o $@
-
-# Future emulator target (uncomment when ready)
-# Note: When we add graphics/audio, we may also need -lSDL2_mixer for sound
-# $(EMULATOR_TARGET): $(ALL_OBJECTS)
-# 	@mkdir -p $(BIN_DIR)
-# 	$(CC) $(CFLAGS) -o $@ $(ALL_OBJECTS) -lSDL2
-# 	@echo "✓ Built $(EMULATOR_TARGET) successfully!"
 
 # =============================================================================
 # UTILITY TARGETS  
@@ -175,12 +148,11 @@ help:
 	@echo "  make              - Build emulator only (default)"
 	@echo "  make disassemble  - Build standalone disassembler only"
 	@echo "  make both         - Build both emulator and disassembler"
-	@echo "  make test-disasm  - Test standalone disassembler with ROM"
-	@echo "  make test-emulator- Test emulator with ROM"
 	@echo "  make test         - Test both disassembler and emulator"
 	@echo "  make debug        - Debug build of emulator"
 	@echo "  make clean        - Clean up build files"
 	@echo "  make status       - Show project status"
+	@echo "  make install-deps - Install dependencies required to build project"
 	@echo ""
 	@echo "File structure expected:"
 	@echo "  $(CPU_DIR)/disassembler.h     - Header file"
